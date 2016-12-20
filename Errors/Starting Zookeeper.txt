@@ -1,0 +1,9 @@
+C:\Apps\Zookeeper>call "C:\Java\Jre"\bin\java "-Dzookeeper.log.dir=C:\Apps\Zookeeper\bin\..\logs" "-Dzookeeper.root.logg
+er=INFO,CONSOLE" "-Dzookeeper.log.file=zookeeper-Administrator-server-TESTSERVER2016.log" "-XX:+HeapDumpOnOutOfMemoryErr
+or" "-XX:OnOutOfMemoryError=cmd /c taskkill /pid %%p /t /f" -cp "C:\Apps\Zookeeper\bin\..\build\classes;C:\Apps\Zookeepe
+r\bin\..\build\lib\*;C:\Apps\Zookeeper\bin\..\*;C:\Apps\Zookeeper\bin\..\lib\*;C:\Apps\Zookeeper\bin\..\conf" org.apache
+.zookeeper.server.quorum.QuorumPeerMain "C:\Apps\Zookeeper\bin\..\conf\zoo.cfg"
+log4j:WARN No appenders could be found for logger (org.apache.zookeeper.server.quorum.QuorumPeerConfig).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
+Invalid config, exiting abnormally
