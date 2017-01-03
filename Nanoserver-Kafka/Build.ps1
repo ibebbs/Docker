@@ -25,12 +25,15 @@ $kafkaGzip = $tmpDir + "\Kafka.tar.gz"
 $kafkaTar = $tmpDir + "\Kafka.tar"
 
 ## Target locations
-$targetDir = "C:\"
+$targetDir = "C:"
 $appDir = $targetDir + "\Apps"
 $dataDir = $targetDir + "\Data"
 $jreDir = $appDir + "\Jre"
 $kafkaDir = $appDir + "\Kafka"
 $kafkaDataDir = $dataDir + "\Kafka"
+
+## Configuation
+$zooKeeperUri = "172.29.194.223:2181"
 
 ## Executables
 $zip = $buildZipDir + "\7z.exe"
@@ -119,11 +122,11 @@ function Get-Kafka()
 {
     Invoke-WebRequest -Uri $kafkaUri -OutFile $kafkaGzip
     Expand-File $kafkaGzip $tmpDir
-    Expand-Directory $kafka $buildKafkaDir
+    Expand-Directory $kafkaTar $buildKafkaDir
 
     ## Above will expand to a directory containing version name which we want to remove
     ## so we'll move everything up a directory
-    $folder = Get-ChildItem -Path $buildKafkaDir -Filter "kafka-*"
+    $folder = Get-ChildItem -Path $buildKafkaDir -Filter "kafka_*"
     Get-ChildItem -Path $folder.FullName -Recurse | Move-Item -destination $buildKafkaDir -Force
         
     Remove-Item -Path $folder.FullName -Force
@@ -138,9 +141,12 @@ function Initialize-Kafka()
 
     $kafkaDataLinuxDir = $kafkaDataDir.Replace('\', '/')
 
-    $configFile = $buildKafkaDir + '\conf\server.properties'
+    $configFile = $buildKafkaDir + '\config\server.properties'
 
-    $config = [IO.File]::ReadAllText($configFile) -replace "log.dirs=[\/\w]*", ("log.dirs=" + $kafkaDataLinuxDir)
+    $config = [IO.File]::ReadAllText($configFile) `
+      -replace "log.dirs=[\/\w]*", ("log.dirs=" + $kafkaDataLinuxDir) `
+      -replace "zookeeper.connect=\w+\:\d+", ("zookeeper.connect=" + $zooKeeperUri)
+
     [IO.File]::WriteAllText($configFile, $config)
 }
 
