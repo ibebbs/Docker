@@ -1,0 +1,8 @@
+FROM microsoft/nanoserver
+MAINTAINER Ian Bebbington <docker@bebbs.co.uk>
+LABEL Description="Kafka running on Microsoft Nanoserver" Version="0.1"
+ADD Root /
+ADD Start-Kafka.ps1 /
+RUN setx /M JAVA_HOME C:\Apps\Jre
+EXPOSE 2181
+ENTRYPOINT [ "powershell.exe", "C:/Start-Zookeeper.ps1" ]
