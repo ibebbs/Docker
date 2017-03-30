@@ -1,7 +1,7 @@
 ## Download sources
 $zipUri = "http://homeserver/download/7z1604-x64.exe" # http://www.7-zip.org/a/7z1604-x64.exe";
 $javaUri = "http://homeserver/download/jre-8u111-windows-x64.tar.gz" # "http://download.oracle.com/otn-pub/java/jdk/8u111-b14/jre-8u111-windows-x64.tar.gz"
-$neo4jUri = "http://homeserver/download/neo4j-community-3.1.3-windows.zip" # "http://apache.mirrors.nublue.co.uk/zookeeper/zookeeper-3.4.9/zookeeper-3.4.9.tar.gz"
+$neo4jUri = "http://homeserver/download/neo4j-community-3.1.3-windows.zip" # "http://info.neo4j.com/download-thanks.html?edition=community&release=3.1.3&flavour=winzip&_ga=1.115918662.1383524316.1490904367"
 $dockerModuleUri = "http://homeserver/download/Docker.0.1.0.zip" # "https://github.com/Microsoft/Docker-PowerShell/releases/download/v0.1.0/Docker.0.1.0.zip"
 
 ## Build location
@@ -15,25 +15,26 @@ $buildDockerModule = $tmpDir + "\Docker"
 $buildZipDir = $tmpDir + "\7zip"
 $buildJreDir = $biuldAppDir + "\Jre"
 $buildNeo4jDir = $biuldAppDir + "\Neo4j"
+$buildNeo4jManagementDir = $buildNeo4jDir + "\bin\Neo4j-Management"
 $buildNeo4jDataDir = $buildDataDir + "\Neo4j"
 
 ## Temp files
 $zipInstaller = $tmpDir + "\7zInstaller.exe"
 $jreGzip = $tmpDir + "\Jre.tar.gz"
 $jreTar = $tmpDir + "\Jre.tar"
-$neo4jZip = $tmpDir + "Neo4j.zip"
+$neo4jZip = $tmpDir + "\Neo4j.zip"
 
 ## Target locations
 $targetDir = "C:\"
 $appDir = $targetDir + "\Apps"
 $dataDir = $targetDir + "\Data"
 $jreDir = $appDir + "\Jre"
-$zookeeperDir = $appDir + "\Neo4j"
-$zookeeperDataDir = $dataDir + "\Neo4j"
+$neo4jDir = $appDir + "\Neo4j"
+$neo4jDataDir = $dataDir + "\Neo4j"
 
 ## Executables
 $zip = $buildZipDir + "\7z.exe"
-$neo4j = $zookeeperDir + "\bin\neo4j.bat"
+$neo4j = $neo4jDir + "\bin\neo4j.bat"
 $docker = "docker"
 
 function New-TempPath()
@@ -121,8 +122,8 @@ function Get-Neo4j()
 
     ## Above will expand to a directory containing version name which we want to remove
     ## so we'll move everything up a directory
-    $folder = Get-ChildItem -Path $buildZookeeperDir -Filter "neo4j-*"
-    Get-ChildItem -Path $folder.FullName -Recurse | Move-Item -destination $buildZookeeperDir -Force
+    $folder = Get-ChildItem -Path $buildNeo4jDir -Filter "neo4j-*"
+    Get-ChildItem -Path $folder.FullName -Recurse | Move-Item -destination $buildNeo4jDir -Force
         
     Remove-Item -Path $folder.FullName -Force
     Remove-Item -Path $neo4jZip -Force
@@ -135,12 +136,22 @@ function Initialize-Neo4j()
 
     $neo4jDataLinuxDir = $buildNeo4jDataDir.Replace('\', '/')
 
-    $configFile = $buildZookeeperDir + '\conf\neo4j.conf'
+    $configFile = $buildNeo4jDir + '\conf\neo4j.conf'
 
     $config = [IO.File]::ReadAllText($configFile) `
-     -replace "#dbms.connectors.default_listen_address=0.0.0.0", "dbms.connectors.default_listen_address=0.0.0.0" `
+     -replace "#dbms.connectors.default_listen_address=0.0.0.0", "dbms.connectors.default_listen_address=0.0.0.0"
 
     [IO.File]::WriteAllText($configFile, $config)
+}
+
+function Limit-Neo4j()
+{
+    $setNeo4jEnvScript = $buildNeo4jManagementDir + "\Set-Neo4jEnv.ps1"
+    
+    $script = [IO.File]::ReadAllText($setNeo4jEnvScript) `
+     -replace ', "Process"', ''
+
+    [IO.File]::WriteAllText($setNeo4jEnvScript, $script)
 }
 
 function New-DockerImage()
@@ -161,6 +172,7 @@ Install-7zip
 Get-Java
 Get-Neo4j
 Initialize-Neo4j
+Limit-Neo4j
 
 # Build docker image
 New-DockerImage

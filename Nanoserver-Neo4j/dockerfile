@@ -4,5 +4,5 @@ LABEL Description="Neo4j running on Microsoft Nanoserver" Version="0.1"
 ADD Root /
 ADD Start-Neo4j.ps1 /
 RUN setx /M JAVA_HOME C:\Apps\Jre
-EXPOSE 7474
+EXPOSE 7474 7473 7687
 ENTRYPOINT [ "powershell.exe", "C:/Start-Neo4j.ps1" ]
