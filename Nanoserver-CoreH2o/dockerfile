@@ -1,0 +1,8 @@
+FROM microsoft/nanoserver
+MAINTAINER Ian Bebbington <docker@bebbs.co.uk>
+LABEL Description="H20.ai running on Microsoft Nanoserver" Version="0.1"
+ADD Root /
+ADD Start-H2o.ps1 /
+RUN setx /M JAVA_HOME C:\Apps\Jre
+EXPOSE 54321
+ENTRYPOINT [ "powershell.exe", "C:/Start-H2o.ps1" ]
