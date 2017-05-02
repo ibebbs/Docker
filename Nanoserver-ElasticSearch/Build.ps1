@@ -1,7 +1,7 @@
 ## Download sources
 $zipUri = "http://homeserver/download/7z1604-x64.exe" # http://www.7-zip.org/a/7z1604-x64.exe";
 $javaUri = "http://homeserver/download/jre-8u111-windows-x64.tar.gz" # "http://download.oracle.com/otn-pub/java/jdk/8u111-b14/jre-8u111-windows-x64.tar.gz"
-$elasticSearchUri = "http://homeserver/download/stanford-corenlp-full-2016-10-31.zip" # "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.3.2.zip"
+$elasticSearchUri = "http://homeserver/download/elasticsearch-5.3.2.zip" # "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.3.2.zip"
 $dockerModuleUri = "http://homeserver/download/Docker.0.1.0.zip" # "https://github.com/Microsoft/Docker-PowerShell/releases/download/v0.1.0/Docker.0.1.0.zip"
 
 ## Build location
@@ -125,6 +125,16 @@ function Get-ElasticSearch()
     Remove-Item -Path $elasticSearchZip -Force
 }
 
+function Initialize-ElasticSearch()
+{
+    $configFile = $buildElasticSearchDir + '\config\elasticsearch.yml'
+
+    $config = [IO.File]::ReadAllText($configFile) `
+        -replace "#http.port: 9200", "http.port: 9200" `
+        -replace "#network.host: 192.168.0.1", "network.host: 0.0.0.0"
+    [IO.File]::WriteAllText($configFile, $config)
+}
+
 function New-DockerImage()
 {
     Build-ContainerImage -Path $buildDir -Repository "ibebbs/nanoelastic:latest"
@@ -132,22 +142,25 @@ function New-DockerImage()
 
 
 # Setup directory structure
-New-TempPath
-New-RootPath
+#New-TempPath
+#New-RootPath
 
 # Install required tools
-Install-DockerModule
-Install-7zip
+#Install-DockerModule
+#Install-7zip
 
 # Get components
-Get-Java
+#Get-Java
 Get-ElasticSearch
+
+# Configure components
+Initialize-ElasticSearch
 
 # Build docker image
 New-DockerImage
 
 # Cleanup
-Remove-DockerModule
-Remove-7zip
-Remove-TempPath
-Remove-RootPath
+#Remove-DockerModule
+#Remove-7zip
+#Remove-TempPath
+#Remove-RootPath
