@@ -100,7 +100,7 @@ function New-Nano2Docker {
         [Parameter(Mandatory=$false, HelpMessage="Specifies the directory in which to save the new VHDX")]
         [string]$VMPath="C:\Users\Public\Documents\Hyper-V\Virtual Hard Disks",
         [Parameter(Mandatory=$false, HelpMessage="Specifies the number of processors to allocate to the virtual machine")]
-        [int]$VMProcessor=4
+        [int]$VMProcessor=4,
         [Parameter(Mandatory=$false, HelpMessage="Password for the Administrator account of the virtual machine")]
         [SecureString]$Password
     )
