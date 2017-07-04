@@ -22,6 +22,13 @@ Get-ChildItem -Path $folder.FullName -Recurse | Move-Item -destination $elasticS
 Remove-Item -Path $folder.FullName -Force
 Remove-Item -Force elasticsearch.zip
 
+$configFile = "$($elasticSearchDirectory)\config\elasticsearch.yml"
+
+$config = [IO.File]::ReadAllText($configFile) `
+    -replace "#http.port: 9200", "http.port: 9200" `
+    -replace "#network.host: 192.168.0.1", "network.host: 0.0.0.0"
+[IO.File]::WriteAllText($configFile, $config)
+
 netsh advfirewall firewall add rule name="ElasticSearch Client" dir=in action=allow protocol=TCP localport=9200
 netsh advfirewall firewall add rule name="ElasticSearch Server" dir=in action=allow protocol=TCP localport=9300
 
