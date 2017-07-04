@@ -29,8 +29,8 @@ function Initialize-Nano2DockerImage {
     Param(
         [Parameter(Mandatory=$true, HelpMessage="Specifies the path of the source media. If a local copy of the source media already exists, and it is specified using the BasePath parameter, then no copying is performed.")]
         [string]$MediaPath,
-        [Parameter(Mandatory=$true, HelpMessage="Specifies the path where Nano Server files are copied from the source media. These files are not automatically deleted after running Edit-NanoServerImage or New-NanoServerImage. This enables you to copy the Nano Server files from the source media once with the MediaPath parameter and reuse the same files with the BasePath parameter when running Edit-NanoServerImage or New-NanoServerImage again.")]
-        [string]$BasePath,
+        [Parameter(Mandatory=$true, HelpMessage="Specifies the path where Nano Server files are copied from the source media and additional files created.")]
+        [string]$BuildPath,
         [Parameter(Mandatory=$false, HelpMessage="Url to Docker zip file")]
         [string]$DockerUrl="https://download.docker.com/components/engine/windows-server/17.03/docker-17.03.0-ee.zip",
         [Parameter(Mandatory=$false, HelpMessage="Url to Docker zip file", ParameterSetName="WebUpdate")]
@@ -43,8 +43,8 @@ function Initialize-Nano2DockerImage {
 
     Import-Module "$($MediaPath)\NanoServer\NanoServerImageGenerator\NanoServerImageGenerator.psm1"
 
-    if ($BasePath -eq "") {
-        $BasePath = Convert-Path -Path .
+    if ($BuildPath -eq "") {
+        $BuildPath = Convert-Path -Path .
     }
 
     if (($Password -eq $null) -or ($Password -eq "")) {
@@ -53,39 +53,48 @@ function Initialize-Nano2DockerImage {
     }
     
     $expand = "expand"
-    
-    $prepareDockerBatchFile = "$($BasePath)\PrepareDocker.bat"
+
+    Write-Host "Creating files for Nano2Docker Image"
+
+    $prepareDockerBatchFile = "$($BuildPath)\PrepareDocker.bat"
     New-Item -Type File $prepareDockerBatchFile -Force
     Add-Content $prepareDockerBatchFile $prepareDockerBatch
 
-    $prepareDockerPowershellFile = "$($BasePath)\PrepareDocker.ps1"
+    $prepareDockerPowershellFile = "$($BuildPath)\PrepareDocker.ps1"
     New-Item -Type File $prepareDockerPowershellFile -Force
     Add-Content $prepareDockerPowershellFile $prepareDockerPowershell
 
-    $docker = "$($BasePath)\docker.zip"
+    Write-Host "Downloading docker from $($DockerUrl)"
+
+    $docker = "$($BuildPath)\docker.zip"
     Invoke-Webrequest -UseBasicparsing -Outfile $docker $DockerUrl
     
     $name = "Nano2Docker"
-    $diskPath = "$($BasePath)\$($name).vhdx"
+    $diskPath = "$($BuildPath)\$($name).vhdx"
 
     if ($psCmdlet.ParameterSetName -eq "WebUpdate") {
-        New-Item -Type Directory "$($BasePath)\Updates" -ErrorAction SilentlyContinue
-        Invoke-WebRequest -UseBasicparsing -Outfile "$($BasePath)\Updates\Update.msu" $UpdateUrl
-        $UpdateFile = "$($BasePath)\Updates\Update.msu"
+        New-Item -Type Directory "$($BuildPath)\Updates" -ErrorAction SilentlyContinue
+        $UpdateFile = "$($BuildPath)\Updates\Update.msu"
+
+        Write-Host "Downloading update file from $($UpdateUrl) to $($UpdateFile)"
+        Invoke-WebRequest -UseBasicparsing -Outfile $UpdateFile $UpdateUrl
     } else {
-        Copy-Item $UpdateFile -Destination "$($BasePath)\Updates\Update.msu" -Force
-        $UpdateFile = "$($BasePath)\Updates\Update.msu"
+        Write-Host "Copying update file from $($UpdateFile) to $($BuildPath)\Updates\Update.msu"
+        Copy-Item $UpdateFile -Destination "$($BuildPath)\Updates\Update.msu" -Force
+        $UpdateFile = "$($BuildPath)\Updates\Update.msu"
     }
     
-    &$expand $UpdateFile "$($BasePath)\Updates" -F:*.cab -R
-    $update = @(Get-ChildItem -Path "$($BasePath)\Updates" -Filter "*.cab" | 
+    Write-Host "Expanding updates from $($UpdateFile)"
+    &$expand $UpdateFile "$($BuildPath)\Updates" -F:*.cab -R
+    $update = @(Get-ChildItem -Path "$($BuildPath)\Updates" -Filter "*.cab" | 
         Where-Object {$_.Name -ne "WSUSSCAN.cab"} | 
         Select-Object FullName |
         ForEach-Object { $_.FullName })
     
     $servicingPath = [System.String]::Join(", ", $update)
 
-    New-NanoServerImage -DeploymentType Guest -Edition Standard -MediaPath $MediaPath -BasePath $BasePath -TargetPath $diskPath -Containers -EnableRemoteManagementPort -CopyPath @($docker, $prepareDockerBatchFile, $prepareDockerPowershellFile) -SetupCompleteCommand "C:\PrepareDocker.bat" -ComputerName $name -AdministratorPassword $Password -ServicingPackagePath $servicingPath.ToString()
+    Write-Host "Writing new NanoServerImage to $($diskPath)"
+    New-NanoServerImage -DeploymentType Guest -Edition Standard -MediaPath $MediaPath -BasePath $BuildPath -TargetPath $diskPath -Containers -EnableRemoteManagementPort -CopyPath @($docker, $prepareDockerBatchFile, $prepareDockerPowershellFile) -SetupCompleteCommand "C:\PrepareDocker.bat" -ComputerName $name -AdministratorPassword $Password -ServicingPackagePath $servicingPath.ToString()
 }
 
 function New-Nano2Docker {
@@ -115,15 +124,21 @@ function New-Nano2Docker {
     
     $diskPath = "$($VMPath)\$($VMName).vhdx"
 
+    Write-Host "Copying NanoServerImage from $($ImagePath) to $($diskPath)"
     Copy-Item -Path $ImagePath -Destination $diskPath
 
+    Write-Host "Updating NanoServerImage"
     Edit-NanoServerImage -TargetPath $diskPath -ComputerName $VMName -AdministratorPassword $Password
+    
+    Write-Host "Creating new VM named $($VMName)"
     New-VM -Name $VMName -Generation 2 -VHDPath $diskPath -BootDevice "VHD" -Path $VMPath -SwitchName (Get-VMSwitch).Name
 
     $vm = Get-VM -VMName $VMName
 
     Set-VMProcessor -VM $vm -Count 4
     Set-VMMemory -VM $vm -DynamicMemoryEnabled $True -MaximumBytes 17179869184 -StartupBytes 2147483648
+    
+    Write-Host "Starting $($VMName)"
     Start-VM -VM $vm
     Wait-VM -VM $vm
 
