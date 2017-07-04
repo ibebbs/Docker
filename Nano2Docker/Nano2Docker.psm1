@@ -163,9 +163,7 @@ Function New-Nano2DockerSwarm {
         [Parameter(Mandatory=$false, HelpMessage="Number of manager nodes to create")]
         [int]$ManagerNodes=1,
         [Parameter(Mandatory=$false, HelpMessage="Number of worker nodes to create")]
-        [int]$WorkerNodes=3,
-        [Parameter(Mandatory=$false, HelpMessage="Number of worker nodes to create")]
-        [string]$DockerUrl="https://download.docker.com/components/engine/windows-server/17.03/docker-17.03.0-ee.zip"
+        [int]$WorkerNodes=3
     )
 
     $docker = "docker.exe"
