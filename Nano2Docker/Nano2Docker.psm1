@@ -1,10 +1,10 @@
-$prepareDockerBatch = @"
+$prepareDockerBatch = @'
 set LOCALAPPDATA=%USERPROFILE%\AppData\Local `r`n
 set PSExecutionPolicyPreference=Unrestricted `r`n
 powershell C:\PrepareDocker.ps1 `r`n
-"@
+'@
 
-$prepareDockerPowershell = @"
+$prepareDockerPowershell = @'
 Expand-Archive C:\docker.zip -DestinationPath $Env:ProgramFiles `r`n
 Remove-Item -Force docker.zip `r`n
 `r`n
@@ -22,7 +22,7 @@ Add-Content 'C:\ProgramData\docker\config\daemon.json' '{ "hosts": ["tcp://0.0.0
 `r`n
 dockerd --register-service `r`n
 Start-Service docker `r`n
-"@
+'@
 
 function Initialize-Nano2DockerImage {
     [CmdletBinding(DefaultParameterSetName="WebUpdate")]
