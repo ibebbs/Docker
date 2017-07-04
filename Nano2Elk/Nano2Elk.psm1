@@ -89,7 +89,7 @@ function Initialize-Nano2ElasticSearchImage {
     $elasticsearch = "$($BuildPath)\elasticsearch.zip"
     Invoke-Webrequest -UseBasicparsing -Outfile $elasticsearch $ElasticSearchUrl    
     
-    $name = "Nano2ElasticSearch"
+    $name = "Nano2ES"
     $diskPath = "$($BuildPath)\$($name).vhdx"
 
     if ($psCmdlet.ParameterSetName -eq "WebUpdate") {
