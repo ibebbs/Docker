@@ -9,7 +9,7 @@ Expand-Archive C:\docker.zip -DestinationPath $Env:ProgramFiles
 Remove-Item -Force docker.zip
 
 $env:path += ";$env:ProgramFiles\docker"
-[Environment]::SetEnvironmentVariable("PATH", "$($env:path)")
+[Environment]::SetEnvironmentVariable("PATH", $env:path)
 
 netsh advfirewall firewall add rule name="Docker daemon" dir=in action=allow protocol=TCP localport=2375-2377
 netsh advfirewall firewall add rule name="Docker chatter TCP" dir=in action=allow protocol=TCP localport=7946
