@@ -1,27 +1,27 @@
 $prepareDockerBatch = @'
-set LOCALAPPDATA=%USERPROFILE%\AppData\Local `r`n
-set PSExecutionPolicyPreference=Unrestricted `r`n
-powershell C:\PrepareDocker.ps1 `r`n
+set LOCALAPPDATA=%USERPROFILE%\AppData\Local
+set PSExecutionPolicyPreference=Unrestricted
+powershell C:\PrepareDocker.ps1
 '@
 
 $prepareDockerPowershell = @'
-Expand-Archive C:\docker.zip -DestinationPath $Env:ProgramFiles `r`n
-Remove-Item -Force docker.zip `r`n
-`r`n
-$env:path += ";$env:ProgramFiles\docker" `r`n
-[Environment]::SetEnvironmentVariable("PATH", $env:path) `r`n
-`r`n
-netsh advfirewall firewall add rule name="Docker daemon" dir=in action=allow protocol=TCP localport=2375-2377 `r`n
-netsh advfirewall firewall add rule name="Docker chatter TCP" dir=in action=allow protocol=TCP localport=7946 `r`n
-netsh advfirewall firewall add rule name="Docker chatter UDP" dir=in action=allow protocol=UDP localport=7946 `r`n
-netsh advfirewall firewall add rule name="Docker network" dir=in action=allow protocol=UDP localport=4789 `r`n
-`r`n
-New-Item -Type File 'C:\ProgramData\docker\config\daemon.json' -Force `r`n
-`r`n
-Add-Content 'C:\ProgramData\docker\config\daemon.json' '{ "hosts": ["tcp://0.0.0.0:2375", "npipe://"] }' `r`n
-`r`n
-dockerd --register-service `r`n
-Start-Service docker `r`n
+Expand-Archive C:\docker.zip -DestinationPath $Env:ProgramFiles
+Remove-Item -Force docker.zip
+
+$env:path += ";$env:ProgramFiles\docker"
+[Environment]::SetEnvironmentVariable("PATH", "$($env:path)")
+
+netsh advfirewall firewall add rule name="Docker daemon" dir=in action=allow protocol=TCP localport=2375-2377
+netsh advfirewall firewall add rule name="Docker chatter TCP" dir=in action=allow protocol=TCP localport=7946
+netsh advfirewall firewall add rule name="Docker chatter UDP" dir=in action=allow protocol=UDP localport=7946
+netsh advfirewall firewall add rule name="Docker network" dir=in action=allow protocol=UDP localport=4789
+
+New-Item -Type File 'C:\ProgramData\docker\config\daemon.json' -Force
+
+Add-Content 'C:\ProgramData\docker\config\daemon.json' '{ "hosts": ["tcp://0.0.0.0:2375", "npipe://"] }'
+
+dockerd --register-service
+Start-Service docker
 '@
 
 function Initialize-Nano2DockerImage {
