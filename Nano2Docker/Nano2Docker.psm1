@@ -159,7 +159,7 @@ Function New-Nano2DockerSwarm {
         [Parameter(Mandatory=$true, HelpMessage="Directory in which to store VM files")]
         [string]$VMPath,
         [Parameter(Mandatory=$false, HelpMessage="Prefix for the new hyper-v instance names")]
-        [string]$VMPrefix="b2n",
+        [string]$VMPrefix="n2d",
         [Parameter(Mandatory=$false, HelpMessage="Number of manager nodes to create")]
         [int]$ManagerNodes=1,
         [Parameter(Mandatory=$false, HelpMessage="Number of worker nodes to create")]
