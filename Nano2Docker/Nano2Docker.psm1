@@ -177,8 +177,9 @@ Function New-Nano2DockerSwarm {
     
     For ($managerCount = 0; $managerCount -lt $ManagerNodes; $managerCount++) {
         $managerName = "$($VMPrefix)-mngr-$($managerCount)"
-        $managerDisk = "$($managerName).vhdx"
-        $managerDiskPath = "$($VMPath)\$($managerName)\$($managerDisk)"
+        $managerDiskPath = "$($VMPath)\$($managerName)"
+
+        New-Item -ItemType Directory -Path $managerDiskPath -Force
 
         Write-Output "Creating manager node named '$($managerName)' at '$($managerDiskPath)'"
 
@@ -231,9 +232,10 @@ Function New-Nano2DockerSwarm {
     }
         
     For ($workerCount = 0; $workerCount -lt $WorkerNodes; $workerCount++) {
-        $workerName = $VMPrefix + "-wrkr-" + $workerCount
-        $workerDisk = $workerName + ".vhdx"
-        $workerDiskPath = $VMPath + "\" + $workerDisk
+        $workerName = "$($VMPrefix)-wrkr-$($managerCount)"
+        $workerDiskPath = "$($VMPath)\$($workerName)"
+        
+        New-Item -ItemType Directory -Path $workerDiskPath -Force
         
         Write-Output "Creating worked node named '$($workerName)' at '$($workerDiskPath)'"
         
