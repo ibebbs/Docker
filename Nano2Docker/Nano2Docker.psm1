@@ -232,7 +232,7 @@ Function New-Nano2DockerSwarm {
     }
         
     For ($workerCount = 0; $workerCount -lt $WorkerNodes; $workerCount++) {
-        $workerName = "$($VMPrefix)-wrkr-$($managerCount)"
+        $workerName = "$($VMPrefix)-wrkr-$($workerCount)"
         $workerDiskPath = "$($VMPath)\$($workerName)"
         
         New-Item -ItemType Directory -Path $workerDiskPath -Force
