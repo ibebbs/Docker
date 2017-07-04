@@ -114,7 +114,7 @@ function Initialize-Nano2ElasticSearchImage {
     $servicingPath = [System.String]::Join(", ", $update)
 
     Write-Host "Writing new NanoServerImage to $($diskPath)"
-    New-NanoServerImage -DeploymentType Guest -Edition Standard -MediaPath $MediaPath -BasePath $BuildPath -TargetPath $diskPath -Containers -EnableRemoteManagementPort -CopyPath @($jre, $elasticsearch, $prepareElasticsearchBatchFile, $prepareElasticsearchPowershellFile) -SetupCompleteCommand "C:\PrepareElasticsearch.bat" -ComputerName $name -AdministratorPassword $Password -ServicingPackagePath $servicingPath.ToString()
+    New-NanoServerImage -DeploymentType Guest -Edition Standard -MediaPath $MediaPath -BasePath $BuildPath -TargetPath $diskPath -EnableRemoteManagementPort -CopyPath @($jre, $elasticsearch, $prepareElasticsearchBatchFile, $prepareElasticsearchPowershellFile) -SetupCompleteCommand "C:\PrepareElasticsearch.bat" -ComputerName $name -AdministratorPassword $Password -ServicingPackagePath $servicingPath.ToString()
 }
 
 function New-Nano2ElasticSearch {
