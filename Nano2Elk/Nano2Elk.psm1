@@ -1,14 +1,14 @@
 $prepareElasticsearchBatch = @'
 set LOCALAPPDATA=%USERPROFILE%\AppData\Local
 set PSExecutionPolicyPreference=Unrestricted
-powershell C:\PrepareDocker.ps1
+powershell C:\PrepareElasticsearch.ps1
 '@
 
 $prepareElasticsearchPowershell = @'
 $jreDirectory = "$($Env:ProgramFiles)\jre"
 Expand-Archive C:\jre.zip -DestinationPath $jreDirectory
 $folder = Get-ChildItem -Path $jreDirectory -Filter "jre*"
-Get-ChildItem -Path $folder.FullName -Recurse | Move-Item -destination $buildJreDir -Force
+Get-ChildItem -Path $folder.FullName -Recurse | Move-Item -destination $jreDirectory -Force
 Remove-Item -Path $folder.FullName -Force
 Remove-Item -Force jre.zip
 
@@ -32,11 +32,14 @@ $config = [IO.File]::ReadAllText($configFile) `
 netsh advfirewall firewall add rule name="ElasticSearch Client" dir=in action=allow protocol=TCP localport=9200
 netsh advfirewall firewall add rule name="ElasticSearch Server" dir=in action=allow protocol=TCP localport=9300
 
-$elasticSearch = "$($elasticSearchDirectory)\bin\service.bat install"
+$elasticSearchService = "$($elasticSearchDirectory)\bin\elasticsearch-service.bat" 
+$config = [IO.File]::ReadAllText($elasticSearchService) `
+    -replace "%JAVA% -Xmx50M -version 2>&1", "rem %JAVA% -Xmx50M -version 2>&1"
+[IO.File]::WriteAllText($elasticSearchService, $config)
 
-$service = Get-Service | Where-Object { $_.Name -like 'ElasticSearch*' }
-Set-Service -StartupType Automatic $service
-Start-Service $service
+$env:ES_START_TYPE = 'auto'
+&$elasticSearchService install
+&$elasticSearchService start
 '@
 
 function Initialize-Nano2ElasticSearchImage {
@@ -49,7 +52,7 @@ function Initialize-Nano2ElasticSearchImage {
         [Parameter(Mandatory=$false, HelpMessage="Url to JRE zip file")]
         [string]$JreUrl="http://homeserver/download/jre1.8.0_111.zip",
         [Parameter(Mandatory=$false, HelpMessage="Url to ElasticSearch zip file")]
-        [string]$ElasticSearchUrl="http://homeserver/download/elasticsearch-5.3.2.zip",
+        [string]$ElasticSearchUrl="http://homeserver/download/elasticsearch-5.4.3.zip",
         [Parameter(Mandatory=$false, HelpMessage="Url to Docker zip file", ParameterSetName="WebUpdate")]
         [string]$UpdateUrl="http://download.windowsupdate.com/d/msdownload/update/software/updt/2017/05/windows10.0-kb4023680-x64_de5502ce899738bedd5eb20f10cfe67ea26ff5b6.msu",
         [Parameter(Mandatory=$false, HelpMessage="Url to Docker zip file", ParameterSetName="FileUpdate")]
