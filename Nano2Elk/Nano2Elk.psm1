@@ -12,6 +12,7 @@ Get-ChildItem -Path $folder.FullName -Recurse | Move-Item -destination $jreDirec
 Remove-Item -Path $folder.FullName -Force
 Remove-Item -Force jre.zip
 
+$env:JAVA_HOME=$jreDirectory
 [Environment]::SetEnvironmentVariable("JAVA_HOME", $jreDirectory)
 
 $elasticSearchDirectory = "$($Env:ProgramFiles)\elasticsearch"
@@ -32,10 +33,16 @@ $config = [IO.File]::ReadAllText($configFile) `
 netsh advfirewall firewall add rule name="ElasticSearch Client" dir=in action=allow protocol=TCP localport=9200
 netsh advfirewall firewall add rule name="ElasticSearch Server" dir=in action=allow protocol=TCP localport=9300
 
+// Service batch file uses "find" command which isn't present on NanoServer so comment it out
 $elasticSearchService = "$($elasticSearchDirectory)\bin\elasticsearch-service.bat" 
 $config = [IO.File]::ReadAllText($elasticSearchService) `
-    -replace "%JAVA% -Xmx50M -version 2>&1", "rem %JAVA% -Xmx50M -version 2>&1"
+    -replace "%JAVA% -Xmx50M", "rem %JAVA% -Xmx50M"
 [IO.File]::WriteAllText($elasticSearchService, $config)
+
+$config = [IO.File]::ReadAllText($elasticSearchService) `
+    -replace "`"%EXECUTABLE%`" //IS//%SERVICE_ID%", "ECHO `"%EXECUTABLE%`" //IS//%SERVICE_ID%"
+[IO.File]::WriteAllText($elasticSearchService, $config)
+
 
 $env:ES_START_TYPE = 'auto'
 &$elasticSearchService install
@@ -159,7 +166,7 @@ function New-Nano2ElasticSearch {
     $vm = Get-VM -VMName $VMName
 
     Set-VMProcessor -VM $vm -Count 4
-    Set-VMMemory -VM $vm -DynamicMemoryEnabled $True -MaximumBytes 17179869184 -StartupBytes 2147483648
+    Set-VMMemory -VM $vm -DynamicMemoryEnabled $True -MaximumBytes 34359738368 -StartupBytes 4294967296
     
     Write-Host "Starting $($VMName)"
     Start-VM -VM $vm
